@@ -1,0 +1,92 @@
+---
+
+- name: Ensure uptime is registered
+  ansible.builtin.command: uptime
+  register: result
+  changed_when: false
+  check_mode: false
+
+- name: Ensure uptime is shown
+  ansible.builtin.debug:
+    var: result.stdout_lines
+
+- name: Ensure target host is upgraded
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest # noqa package-latest
+  register: result
+
+- name: Ensure result is shown
+  ansible.builtin.debug:
+    var: result
+ # result.stdout_lines is not possible cause dnf/yum result is json
+
+
+- name: Ensure reboot is done if needed
+  when: reboot_if_needed
+  block:
+
+    - name: Ensure uptime is registered
+      ansible.builtin.command: uptime
+      register: result
+      changed_when: false
+      check_mode: false
+
+    - name: Ensure uptime is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+
+    - name: Ensure needs-restarting command is present
+      ansible.builtin.package:
+        name: yum-utils
+
+    - name: Ensure needs-restarting is registered
+      ansible.builtin.command: needs-restarting -r
+      register: reboot_required
+      failed_when: false
+      changed_when: false
+
+    - name: Ensure message is shown when reboot is needed
+      ansible.builtin.debug:
+        msg: "Reboot needed"
+      when: reboot_required.rc == 1
+
+    - name: Ensure message is shown when reboot is not needed
+      ansible.builtin.debug:
+        msg: "Reboot not needed"
+      when: reboot_required.rc == 0
+
+    - name: Ensure reboot is done if needed
+      ansible.builtin.reboot:
+      when: reboot_required.rc == 1
+
+    - name: Wait for the reboot and reconnect
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ (ansible_ssh_host | default(ansible_host)) | default(inventory_hostname) }}'
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 60
+      # connection: local
+      when: reboot_required.rc == 2
+
+    - name: Show message its up
+      ansible.builtin.debug:
+        msg:
+          - "ok, now {{ ansible_hostname }} is up again"
+          - "[sudo dnf -y remove --oldinstallonly --setopt installonly_limit=2 kernel] to cleanup old kernels and their space in /boot"
+      when: reboot_required.rc == 1
+
+    - name: Ensure uptime is registered
+      ansible.builtin.command: uptime
+      register: result
+      when: reboot_required.rc == 2
+      changed_when: false
+      check_mode: false
+
+    - name: Ensure uptime is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+      when: reboot_required.rc == 2
+
+...

@@ -1,0 +1,16 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for ansible-role_upgrade
+#
+
+- name: Ensure fact ansible_os_family is gathered
+  ansible.builtin.setup:
+    filter: ansible_os_family
+  when: ansible_facts | length == 0
+
+- name: Ensure OS family is displayed
+  ansible.builtin.debug:
+    msg: OS family {{ ansible_os_family }} detected
+
+- name: Ensure correct tasks are run based on the OS family
+  ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"

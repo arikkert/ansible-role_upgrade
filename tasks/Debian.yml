@@ -1,0 +1,123 @@
+---
+- name: Ensure uptime is registered
+  ansible.builtin.command: uptime
+  register: result
+  changed_when: false
+  check_mode: false
+
+- name: Ensure uptime is shown
+  ansible.builtin.debug:
+    var: result.stdout_lines
+
+- name: Ensure target host is upgraded
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: full
+  register: result
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result.stdout_lines
+
+- name: Ensure reboot is done if needed
+  when: reboot_if_needed
+  block:
+
+    - name: Ensure uptime is registered
+      ansible.builtin.command: uptime
+      register: result
+      changed_when: false
+      check_mode: false
+
+    - name: Ensure uptime is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+
+    - name: Ensure needsrestart command is present
+      ansible.builtin.package:
+        name: needrestart
+
+    - name: Ensure needrestart is registered
+      ansible.builtin.command: needrestart -b
+      register: reboot_required
+      failed_when: false
+      changed_when: false
+      check_mode: false
+
+    #
+    #  Changed this check on exit code cause can return 0 while still
+    #  reboot is needed
+
+    - name: Ensure needrestart is registered
+      ansible.builtin.command: needrestart -b
+      register: reboot_required
+      failed_when: false
+      changed_when: false
+
+    - name: Ensure message is shown when reboot is needed
+      ansible.builtin.debug:
+        msg: "Reboot needed"
+      when: reboot_required.rc == 2
+
+    - name: Ensure message is shown when reboot is not needed
+      ansible.builtin.debug:
+        msg: "Reboot not needed"
+      when: reboot_required.rc == 0 and false
+
+    - name: Ensure message is shown when only some services need restart
+      ansible.builtin.debug:
+        msg: "One or more services need restarting"
+      when: reboot_required.rc == 1
+
+    - name: Ensure message is shown when something is wrong during detection
+      ansible.builtin.debug:
+        msg: "Error occured"
+      when: reboot_required.rc == 3
+
+    - name: Ensure reboot is done when needed
+      ansible.builtin.reboot:
+      when: reboot_required.rc == 2
+
+    #  Better to check on the existence of this file
+    - name: Ensure existence of reboot flagfile is saved
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    - name: Ensure message is shown when reboot flagfile is found
+      ansible.builtin.debug:
+        msg: Reboot flag file is found
+      when: reboot_required_file.stat.exists
+
+    - name: Rensure reboot is done if required
+      ansible.builtin.reboot:
+      when: reboot_required_file.stat.exists
+
+    - name: Wait for the reboot and reconnect
+      ansible.builtin.wait_for:
+        port: 22
+        host: '{{ (ansible_ssh_host | default(ansible_host)) | default(inventory_hostname) }}'
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 60
+      # connection: local
+      when: reboot_required_file.stat.exists
+
+    - name: Show message its up
+      ansible.builtin.debug:
+        msg:
+          - "ok, now {{ ansible_hostname }} is up again"
+      when: reboot_required_file.stat.exists
+
+    - name: Ensure uptime is registered
+      ansible.builtin.command: uptime
+      register: result
+      when: reboot_required_file.stat.exists
+      changed_when: false
+
+    - name: Ensure uptime is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+      when: reboot_required_file.stat.exists
+
+...

@@ -33,7 +33,7 @@
       ansible.builtin.debug:
         var: result.stdout_lines
 
-    - name: Ensure needsrestart command is present
+    - name: Ensure needrestart command is present
       ansible.builtin.package:
         name: needrestart
 
@@ -89,7 +89,7 @@
         msg: Reboot flag file is found
       when: reboot_required_file.stat.exists
 
-    - name: Rensure reboot is done if required
+    - name: Ensure reboot is done if required
       ansible.builtin.reboot:
       when: reboot_required_file.stat.exists
 

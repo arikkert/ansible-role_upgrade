@@ -60,6 +60,11 @@
       ansible.builtin.reboot:
       when: reboot_required.rc == 1
 
+    - name: Ensure message is shown in case of error condition
+      ansible.builtin.debug:
+        msg: "Error condition (invalid option, permission problem, etc.)"
+      when: reboot_required.rc > 1
+
     - name: Wait for the reboot and reconnect
       ansible.builtin.wait_for:
         port: 22
@@ -68,7 +73,7 @@
         delay: 10
         timeout: 60
       # connection: local
-      when: reboot_required.rc == 2
+      when: reboot_required.rc == 1
 
     - name: Show message its up
       ansible.builtin.debug:
@@ -80,13 +85,13 @@
     - name: Ensure uptime is registered
       ansible.builtin.command: uptime
       register: result
-      when: reboot_required.rc == 2
+      when: reboot_required.rc == 1
       changed_when: false
       check_mode: false
 
     - name: Ensure uptime is shown
       ansible.builtin.debug:
         var: result.stdout_lines
-      when: reboot_required.rc == 2
+      when: reboot_required.rc == 1
 
 ...

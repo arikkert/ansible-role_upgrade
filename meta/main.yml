@@ -2,7 +2,7 @@
 galaxy_info:
   role_name: "upgrade"
   author: Andre Rikkert de Koe
-  description: configure SOPS for a specfic user
+  description: Update the OS and packages and optionally reboot if needed
   company: ARK-ICT
   namespace: arikkert
 

@@ -21,6 +21,17 @@
     var: result
  # result.stdout_lines is not possible cause dnf/yum result is json
 
+- name: Ensure target host packages are autoremoved
+  ansible.builtin.dnf:
+    autoremove: "{{ autoremove }}"
+  register: result
+  when: autoremove
+
+- name: Ensure result is shown
+  ansible.builtin.debug:
+    var: result
+ # result.stdout_lines is not possible cause dnf/yum result is json
+
 
 - name: Ensure reboot is done if needed
   when: reboot_if_needed

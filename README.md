@@ -18,9 +18,10 @@ Target host should be upgradeable so have working repositories configured
 Role Variables
 --------------
 
-*reboot_if_needed*: boolean (default false)
+*reboot_if_needed*: boolean (default false) # When true the target host will be rebooted after upgrade when needed
+*autoremove*: boolean (default false) # When true the target host will autoremove packages which the OS/packagemanager expects to be unused
 
-When true the target host will be rebooted after upgrade when needed
+Safe default values are chosen
 
 Dependencies
 ------------

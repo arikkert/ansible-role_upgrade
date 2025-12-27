@@ -19,6 +19,17 @@
   ansible.builtin.debug:
     var: result.stdout_lines
 
+- name: Ensure target host packages are autoremoved
+  ansible.builtin.apt:
+    autoremove: "{{ autoremove }}"
+  register: result
+  when: autoremove
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result.stdout_lines
+  when: autoremove
+
 - name: Ensure reboot is done if needed
   when: reboot_if_needed
   block:

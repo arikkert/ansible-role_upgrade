@@ -20,6 +20,7 @@ Role Variables
 
 - *reboot_if_needed*: boolean (default false) # When true the target host will be rebooted after upgrade when needed
 - *autoremove*: boolean (default false) # When true the target host will autoremove packages which the OS/packagemanager expects to be unused
+- *clean_all*: boolean (default false) # When true the repo caches are cleaned
 
 Safe default values are chosen
 
@@ -37,6 +38,7 @@ Example Playbook
       roles:
         - role: ansible-role_upgrade
           reboot_if_needed: true
+          # clean_all parameter not specified so defaults to false
 
       # Optional extra checks before continuing
       # e.g. when upgrading all nodes in k8s cluster one by one

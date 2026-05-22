@@ -9,6 +9,27 @@
   ansible.builtin.debug:
     var: result.stdout_lines
 
+- name: Ensure update mode is shown
+  ansible.builtin.debug:
+    msg:
+      - "reboot_if_needed: {{ reboot_if_needed }}"
+      - "autoremove: {{ autoremove }}"
+      - "clean_all: {{ clean_all }}"
+
+- name: Ensure apt is cleaned and result is shown if requested
+  when: clean_all
+  block:
+
+    - name: Ensure apt is cleaned if requested
+      ansible.builtin.apt:
+        clean: true
+      when: clean_all
+      changed_when: false
+
+    - name: Ensure cleanup result is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+
 - name: Ensure target host is upgraded
   ansible.builtin.apt:
     update_cache: true

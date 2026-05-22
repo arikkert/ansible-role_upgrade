@@ -4,3 +4,4 @@
 
 reboot_if_needed: false
 autoremove: false
+clean_all: false

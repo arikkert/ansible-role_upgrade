@@ -10,6 +10,26 @@
   ansible.builtin.debug:
     var: result.stdout_lines
 
+- name: Ensure update mode is shown
+  ansible.builtin.debug:
+    msg:
+      - "reboot_if_needed: {{ reboot_if_needed }}"
+      - "autoremove: {{ autoremove }}"
+      - "clean_all: {{ clean_all }}"
+
+- name: Ensure dnf is cleaned and result is shown if requested
+  when: clean_all
+  block:
+
+    - name: Ensure dnf is cleaned if requested
+      ansible.builtin.command: dnf clean all
+      register: result
+      changed_when: false
+
+    - name: Ensure cleanup result is shown
+      ansible.builtin.debug:
+        var: result.stdout_lines
+
 - name: Ensure target host is upgraded
   ansible.builtin.dnf:
     name: '*'

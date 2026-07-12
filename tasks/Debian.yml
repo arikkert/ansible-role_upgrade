@@ -138,7 +138,7 @@
     - name: Show message its up
       ansible.builtin.debug:
         msg:
-          - "ok, now {{ ansible_hostname }} is up again"
+          - "ok, now {{ ansible_facts['hostname'] }} is up again"
       when: reboot_required_file.stat.exists
 
     - name: Ensure uptime is registered

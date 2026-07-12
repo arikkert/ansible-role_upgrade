@@ -109,7 +109,7 @@
     - name: Show message its up
       ansible.builtin.debug:
         msg:
-          - "ok, now {{ ansible_hostname }} is up again"
+          - "ok, now {{ ansible_facts['hostname'] }} is up again"
           - "[sudo dnf -y remove --oldinstallonly --setopt installonly_limit=2 kernel] to cleanup old kernels and their space in /boot"
       when: reboot_required.rc == 1
 
